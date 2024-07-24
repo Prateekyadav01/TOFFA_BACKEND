@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 
+
+
+
 const userSchema = new mongoose.Schema({
     firstName:{
         type: String,
@@ -26,15 +29,24 @@ const userSchema = new mongoose.Schema({
     password:{
         type:String,
         required:true
+    },
+    otp:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "OTP"
     }
 })
 
-userSchema.pre('save', function(){
-    const user = this;
-    if(user.isModified('password')){
-        user.password = bcrypt.hashSync(user.password, 10);
-    }
-})
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    console.log("------------------------>Password hash")
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+});
+
+userSchema.methods.isPasswordConfirm = async function (password) {
+    console.log("------------------------>Password compare");
+    return await bcrypt.compare(password, this.password);
+};
 
 userSchema.methods.GENERATEACCESSTOKEN = function(){
     try {
@@ -45,7 +57,7 @@ userSchema.methods.GENERATEACCESSTOKEN = function(){
             },
             process.env.ACCESS_TOKEN_SECRET,
             {
-                expiresIn: '1h',
+                expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
             }
         )
     } catch (error) {
