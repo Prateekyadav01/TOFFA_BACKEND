@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     otp:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "OTP"
+    },
+    profile:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Profile"
     }
 })
 
